@@ -1,14 +1,14 @@
-
+#include <SoftwareSerial.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>  
 #include <Wire.h> 
 #include <LiquidCrystal_I2C.h>
 #define pSensor A1
 #define pControle 3
-
+#define DEBUG true
 #define ONE_WIRE_BUS 4
 OneWire oneWire(ONE_WIRE_BUS);
-
+SoftwareSerial mySerial(13, 12); //rx,tx
 float tempMin = 999;
 float tempMax = 0;
 DallasTemperature sensors(&oneWire);
@@ -51,7 +51,7 @@ void setup()
 {
 
   Serial.begin(9600);
-  
+  mySerial.begin(115200);
   sensors.begin(); 
    if (!sensors.getAddress(sensor1, 0)) 
    Serial.println("Sensor nao encontrados !");
@@ -183,10 +183,28 @@ void loop(){
         lcd.print("!"); 
         delay(1000);
         int consumo =0;
-        Serial.write("CLA");
         consumo = (pwmSum*5500) / 3600;
         totalMilliLitres;
         enviaDado = false;
+        
+        sendData("AT+RST\r\n", 2000, DEBUG); // rst
+        // Conecta a rede wireless
+        sendData("AT+CWJAP=\"UnivapWifi\",\"universidade\"\r\n", 2000, DEBUG);
+        delay(3000);
+        sendData("AT+CWMODE=1\r\n", 1000, DEBUG);
+        // Mostra o endereco IP
+        sendData("AT+CIFSR\r\n", 1000, DEBUG);
+           
+        sendData("AT+CIPSTART=\"TCP\",\"54.218.49.54\",80", 1000, DEBUG);
+        String data = String (">GET /SmartShower/consumo/registraconsumo/SSULPHUC1/") +String(totalMilliLitres)+ String ("/") +String(consumo)+String("/")+String(oldTime)+ String(" HTTP/1.1\r\nHost: 54.218.49.54\r\n\r\n");
+        
+        sendData("AT+CIPSEND="+data.length(), 1000, DEBUG);
+        sendData(data, 1000, DEBUG);
+        
+
+       
+       
+
         lcd.clear();
         lcd.print("Ligue o chuveiro...");
         }
@@ -201,3 +219,25 @@ void pulseCounter()
   pulseCount++;
 }
 
+
+String sendData(String command, const int timeout, boolean debug)
+{
+  // Envio dos comandos AT para o modulo
+  String response = "";
+  mySerial.print(command);
+  long int time = millis();
+  while ( (time + timeout) > millis())
+  {
+    while (mySerial.available())
+    {
+      // The esp has data so display its output to the serial window
+      char c = mySerial.read(); // read the next character.
+      response += c;
+    }
+  }
+  if (debug)
+  {
+    Serial.print(response);
+  }
+  return response;
+}
