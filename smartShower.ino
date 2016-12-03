@@ -223,7 +223,7 @@ void pulseCounter()
 
 String sendData(String command, const int timeout, boolean debug)
 {
-  // Envio dos comandos AT para o modulo
+  
   String response = "";
   mySerial.print(command);
   long int time = millis();
@@ -231,8 +231,8 @@ String sendData(String command, const int timeout, boolean debug)
   {
     while (mySerial.available())
     {
-      // The esp has data so display its output to the serial window
-      char c = mySerial.read(); // read the next character.
+    
+      char c = mySerial.read(); 
       response += c;
     }
   }
