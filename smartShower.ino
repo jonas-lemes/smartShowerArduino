@@ -82,12 +82,7 @@ void setup()
 void loop(){
      
      if((millis() - oldTime) > 1000){  
-      pwmSum = 0;    
-      pulseCount= 0;
-      flowRate= 0.0;
-      flowMilliLitres= 0;
-      totalMilliLitres= 0;
-      oldTime= 0;
+    
       flowRate = ((1000.0 / (millis() - oldTime)) * pulseCount) / calibrationFactor;
       
       if(flowRate>0){ 
@@ -171,22 +166,16 @@ void loop(){
         if(enviaDado){
           
         lcd.clear();        
-        lcd.print("Enviando dados");
+        lcd.print("Enviando dados");        
         lcd.setCursor(0, 1); 
         delay(1000);
         lcd.print(".");
-        delay(1000);
-        lcd.print(".");
-        delay(1000);
-        lcd.print("."); 
-        delay(1000);
-        lcd.print("!"); 
-        delay(1000);
+        
         int consumo =0;
         consumo = (pwmSum*5500) / 3600;
-        totalMilliLitres;
-        enviaDado = false;
         
+        enviaDado = false;
+   
         sendData("AT+RST\r\n", 2000, DEBUG); // rst
         // Conecta a rede wireless
         sendData("AT+CWJAP=\"UnivapWifi\",\"universidade\"\r\n", 2000, DEBUG);
@@ -196,14 +185,26 @@ void loop(){
         sendData("AT+CIFSR\r\n", 1000, DEBUG);
            
         sendData("AT+CIPSTART=\"TCP\",\"54.218.49.54\",80", 1000, DEBUG);
-        String data = String (">GET /SmartShower/consumo/registraconsumo/SSULPHUC1/") +String(totalMilliLitres)+ String ("/") +String(consumo)+String("/")+String(oldTime)+ String(" HTTP/1.1\r\nHost: 54.218.49.54\r\n\r\n");
+        
+        String data = String (">GET /SmartShower/consumo/registraconsumo/SSULPHUC1/") +totalMilliLitres+ String ("/") +consumo+String("/")+oldTime+ String(" HTTP/1.1\r\nHost: 54.218.49.54\r\n\r\n");
         
         sendData("AT+CIPSEND="+data.length(), 1000, DEBUG);
         sendData(data, 1000, DEBUG);
+       
+        delay(1000);
+        lcd.print(".");
+        delay(1000);
+        lcd.print("."); 
+        delay(1000);
+        lcd.print("!"); 
+        delay(1000);
         
-
-       
-       
+         pwmSum = 0;    
+        pulseCount= 0;
+        flowRate= 0.0;
+        flowMilliLitres= 0;
+        totalMilliLitres= 0;
+        oldTime= 0;
 
         lcd.clear();
         lcd.print("Ligue o chuveiro...");
